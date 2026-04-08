@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>artquest.m — The Digital Gallery</title>
+  <meta name="description" content="artquest.m — The Digital Gallery. Every stroke tells a story. Explore original artwork, paintings, and illustrations by artquest.m." />
+  <meta property="og:title" content="artquest.m — The Digital Gallery" />
+  <meta property="og:description" content="Every stroke tells a story... Explore original artwork by artquest.m." />
+  <meta property="og:type" content="website" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'bg': '#0a0a0a',
+            'surface': '#111111',
+            'surface2': '#1a1a1a',
+            'text': '#f5f5f5',
+            'text-muted': '#888888',
+            'accent': '#d4af37',
+            'accent-light': '#e8c84a',
+            'accent-dim': 'rgba(212,175,55,0.15)',
+          },
+          fontFamily: {
+            'playfair': ['Playfair Display', 'serif'],
+            'inter': ['Inter', 'sans-serif'],
+            'cormorant': ['Cormorant Garamond', 'serif'],
+          },
+          animation: {
+            'fade-up': 'fadeUp 0.8s ease forwards',
+            'fade-in': 'fadeIn 1s ease forwards',
+            'float': 'float 6s ease-in-out infinite',
+            'shimmer': 'shimmer 2s infinite',
+            'pulse-gold': 'pulseGold 2s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeUp: {
+              '0%': { opacity: '0', transform: 'translateY(40px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-12px)' },
+            },
+            shimmer: {
+              '0%': { backgroundPosition: '-200% center' },
+              '100%': { backgroundPosition: '200% center' },
+            },
+            pulseGold: {
+              '0%, 100%': { boxShadow: '0 0 20px rgba(212,175,55,0.3)' },
+              '50%': { boxShadow: '0 0 40px rgba(212,175,55,0.6)' },
+            },
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: #0a0a0a;
+      color: #f5f5f5;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ──────────────────────────────
+       Scrollbar
+    ────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 2px; }
+
+    /* ──────────────────────────────
+       Noise Overlay
+    ────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* ──────────────────────────────
+       Navbar
+    ────────────────────────────── */
+    #navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(10,10,10,0.6);
+      border-bottom: 1px solid rgba(212,175,55,0.12);
+      transition: all 0.4s ease;
+    }
+
+    #navbar.scrolled {
+      background: rgba(10,10,10,0.85);
+      border-bottom-color: rgba(212,175,55,0.25);
+    }
+
+    .nav-link {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(245,245,245,0.7);
+      transition: color 0.3s ease;
+      position: relative;
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 0; right: 0;
+      height: 1px;
+      background: #d4af37;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+
+    .nav-link:hover { color: #d4af37; }
+    .nav-link:hover::after { transform: scaleX(1); }
+
+    /* ──────────────────────────────
+       Gold Gradient Text
+    ────────────────────────────── */
+    .gold-text {
+      background: linear-gradient(135deg, #d4af37 0%, #f0d060 40%, #d4af37 60%, #a07820 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+    }
+
+    /* ──────────────────────────────
+       Hero
+    ────────────────────────────── */
+    #hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .hero-bg-gradient {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,175,55,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(212,175,55,0.04) 0%, transparent 50%);
+    }
+
+    .hero-grid-lines {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(212,175,55,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(212,175,55,0.04) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 0%, transparent 100%);
+    }
+
+    .hero-name {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(4rem, 12vw, 11rem);
+      font-weight: 900;
+      line-height: 0.9;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-tagline {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: clamp(1rem, 2.5vw, 1.5rem);
+      color: rgba(245,245,245,0.55);
+      letter-spacing: 0.08em;
+    }
+
+    /* ──────────────────────────────
+       Marquee
+    ────────────────────────────── */
+    .marquee-wrapper {
+      overflow: hidden;
+      border-top: 1px solid rgba(212,175,55,0.15);
+      border-bottom: 1px solid rgba(212,175,55,0.15);
+      background: rgba(212,175,55,0.04);
+    }
+
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      animation: marquee 20s linear infinite;
+    }
+
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .marquee-item {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(212,175,55,0.6);
+      padding: 0.6rem 2rem;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    /* ──────────────────────────────
+       Section Titles
+    ────────────────────────────── */
+    .section-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: #d4af37;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    /* ──────────────────────────────
+       Hero Image Frame
+    ────────────────────────────── */
+    .hero-image-frame {
+      position: relative;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .hero-image-frame::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      background: linear-gradient(135deg, #d4af37, transparent 40%, transparent 60%, #d4af37);
+      border-radius: 4px;
+      z-index: -1;
+    }
+
+    .hero-image-frame::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(10,10,10,0.8) 0%, transparent 50%);
+      z-index: 1;
+      border-radius: 2px;
+    }
+
+    /* ──────────────────────────────
+       Gallery Cards
+    ────────────────────────────── */
+    .gallery-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 2px;
+      border: 1px solid rgba(212,175,55,0.1);
+      cursor: pointer;
+      transition: border-color 0.4s ease, transform 0.4s ease;
+    }
+
+    .gallery-card:hover {
+      border-color: rgba(212,175,55,0.4);
+      transform: translateY(-4px);
+    }
+
+    .gallery-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .gallery-card:hover img {
+      transform: scale(1.08);
+    }
+
+    .gallery-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(10,10,10,0.95) 0%,
+        rgba(10,10,10,0.5) 40%,
+        transparent 100%
+      );
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 1.5rem;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .gallery-card:hover .gallery-overlay {
+      opacity: 1;
+    }
+
+    .view-story-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #d4af37;
+      border: 1px solid rgba(212,175,55,0.5);
+      padding: 0.5rem 1rem;
+      border-radius: 1px;
+      transition: all 0.3s ease;
+      width: fit-content;
+      margin-top: 0.75rem;
+    }
+
+    .gallery-card:hover .view-story-btn {
+      background: rgba(212,175,55,0.1);
+      border-color: #d4af37;
+    }
+
+    /* ──────────────────────────────
+       Masonry
+    ────────────────────────────── */
+    .masonry-grid {
+      columns: 1;
+      column-gap: 1rem;
+    }
+
+    @media (min-width: 768px) { .masonry-grid { columns: 2; } }
+    @media (min-width: 1024px) { .masonry-grid { columns: 3; } }
+
+    .masonry-item {
+      break-inside: avoid;
+      margin-bottom: 1rem;
+    }
+
+    /* ──────────────────────────────
+       Bio Section
+    ────────────────────────────── */
+    .bio-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(212,175,55,0.12);
+      border-radius: 2px;
+      backdrop-filter: blur(10px);
+    }
+
+    .arabic-char {
+      font-size: clamp(5rem, 15vw, 10rem);
+      font-weight: 100;
+      line-height: 1;
+      color: rgba(212,175,55,0.2);
+      font-family: 'Playfair Display', serif;
+      position: absolute;
+      right: -1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* ──────────────────────────────
+       Instagram Section
+    ────────────────────────────── */
+    .insta-card {
+      background: rgba(212,175,55,0.03);
+      border: 1px solid rgba(212,175,55,0.15);
+      border-radius: 2px;
+      transition: all 0.4s ease;
+    }
+
+    .insta-card:hover {
+      background: rgba(212,175,55,0.06);
+      border-color: rgba(212,175,55,0.35);
+    }
+
+    .follow-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: transparent;
+      border: 1px solid #d4af37;
+      color: #d4af37;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 1rem 2rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      border-radius: 1px;
+    }
+
+    .follow-btn:hover {
+      background: #d4af37;
+      color: #0a0a0a;
+      box-shadow: 0 0 30px rgba(212,175,55,0.3);
+      transform: translateY(-2px);
+    }
+
+    /* ──────────────────────────────
+       Footer
+    ────────────────────────────── */
+    .footer-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(212,175,55,0.4), transparent);
+    }
+
+    /* ──────────────────────────────
+       Divider
+    ────────────────────────────── */
+    .gold-divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .gold-divider::before,
+    .gold-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(212,175,55,0.5));
+    }
+
+    .gold-divider::after {
+      background: linear-gradient(90deg, rgba(212,175,55,0.5), transparent);
+    }
+
+    /* ──────────────────────────────
+       Scroll Reveal
+    ────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+    /* ──────────────────────────────
+       Cursor Dot
+    ────────────────────────────── */
+    .cursor-dot {
+      width: 8px; height: 8px;
+      background: #d4af37;
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s ease;
+      mix-blend-mode: screen;
+    }
+
+    .cursor-ring {
+      width: 32px; height: 32px;
+      border: 1px solid rgba(212,175,55,0.5);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s, height 0.3s, border-color 0.3s;
+    }
+
+    /* ──────────────────────────────
+       Modal
+    ────────────────────────────── */
+    #modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(12px);
+    }
+
+    #modal-overlay.open { display: flex; }
+
+    #modal-img {
+      max-width: 90vw;
+      max-height: 85vh;
+      object-fit: contain;
+      border: 1px solid rgba(212,175,55,0.3);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1.5rem; right: 1.5rem;
+      color: rgba(245,245,245,0.6);
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+
+    .modal-close:hover { color: #d4af37; }
+
+    /* Floating circle decorations */
+    .deco-circle {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(212,175,55,0.08);
+      pointer-events: none;
+    }
+
+    /* Mobile menu */
+    #mobile-menu {
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,10,0.98);
+      z-index: 999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3rem;
+    }
+
+    #mobile-menu.open { display: flex; }
+
+    .mobile-nav-link {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: rgba(245,245,245,0.6);
+      text-decoration: none;
+      transition: color 0.3s;
+      letter-spacing: 0.04em;
+    }
+
+    .mobile-nav-link:hover { color: #d4af37; }
+  </style>
+</head>
+<body class="bg-bg text-text">
+
+  <!-- Custom Cursor -->
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- Image Modal -->
+  <div id="modal-overlay" onclick="closeModal(event)">
+    <button class="modal-close" onclick="closeModal(null, true)">
+      <i data-lucide="x" style="width:28px;height:28px;"></i>
+    </button>
+    <img id="modal-img" src="" alt="Artwork" />
+  </div>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu">
+    <button id="mobile-close" style="position:absolute;top:1.5rem;right:1.5rem;color:rgba(245,245,245,0.6);cursor:pointer;background:none;border:none;">
+      <i data-lucide="x" style="width:28px;height:28px;"></i>
+    </button>
+    <a href="#gallery" class="mobile-nav-link" onclick="closeMobileMenu()">Gallery</a>
+    <a href="#about" class="mobile-nav-link" onclick="closeMobileMenu()">About</a>
+    <a href="#contact" class="mobile-nav-link" onclick="closeMobileMenu()">Contact</a>
+  </div>
+
+  <!-- ─────────────────── NAVBAR ─────────────────── -->
+  <nav id="navbar" class="px-6 md:px-12 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-8 h-8 border border-[#d4af37] flex items-center justify-center">
+          <span style="font-family:'Playfair Display',serif; font-size:0.8rem; color:#d4af37; font-weight:700; font-style:italic;">A</span>
+        </div>
+        <span style="font-family:'Playfair Display',serif; font-size:1rem; font-weight:700; letter-spacing:0.1em;" class="group-hover:text-accent transition-colors duration-300">
+          artquest<span class="text-accent">.m</span>
+        </span>
+      </a>
+
+      <!-- Desktop Nav -->
+      <div class="hidden md:flex items-center gap-10">
+        <a href="#gallery" class="nav-link" id="nav-gallery">Gallery</a>
+        <a href="#about" class="nav-link" id="nav-about">About</a>
+        <a href="#contact" class="nav-link" id="nav-contact">Contact</a>
+      </div>
+
+      <!-- Instagram CTA -->
+      <a href="https://instagram.com/artquest.m" target="_blank" rel="noopener" class="hidden md:flex items-center gap-2 follow-btn" style="padding:0.5rem 1rem;">
+        <i data-lucide="instagram" style="width:14px;height:14px;"></i>
+        <span>Follow</span>
+      </a>
+
+      <!-- Hamburger -->
+      <button id="hamburger" class="md:hidden text-text-muted hover:text-accent transition-colors" style="background:none;border:none;cursor:pointer;">
+        <i data-lucide="menu" style="width:22px;height:22px;"></i>
+      </button>
+    </div>
+  </nav>
+
+
+  <!-- ─────────────────── HERO ─────────────────── -->
+  <section id="hero" class="px-6 md:px-12">
+    <div class="hero-bg-gradient"></div>
+    <div class="hero-grid-lines"></div>
+
+    <!-- Deco circles -->
+    <div class="deco-circle" style="width:600px;height:600px;top:-200px;right:-200px;animation:float 8s ease-in-out infinite;"></div>
+    <div class="deco-circle" style="width:300px;height:300px;bottom:-100px;left:-100px;animation:float 10s ease-in-out infinite reverse;"></div>
+
+    <div class="max-w-7xl mx-auto w-full relative z-10">
+      <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-20 min-h-screen py-32">
+
+        <!-- Left: Text -->
+        <div class="flex-1 text-center lg:text-left">
+          <div class="section-label mb-6 reveal">The Digital Gallery</div>
+
+          <h1 class="hero-name reveal reveal-delay-1">
+            <span class="gold-text">artquest</span>
+            <br/>
+            <span style="color:rgba(245,245,245,0.9);">.m</span>
+          </h1>
+
+          <p class="hero-tagline mt-6 mb-10 reveal reveal-delay-2">
+            "Every stroke tells a story..."
+          </p>
+
+          <div class="flex flex-col sm:flex-row items-center lg:items-start gap-4 reveal reveal-delay-3">
+            <a href="#gallery" class="follow-btn" id="hero-gallery-btn">
+              <i data-lucide="images" style="width:14px;height:14px;"></i>
+              <span>Explore Gallery</span>
+            </a>
+            <a href="#about" class="nav-link" style="font-size:0.8rem; display:flex; align-items:center; gap:0.5rem; padding: 1rem; color:rgba(245,245,245,0.5);">
+              <i data-lucide="user" style="width:14px;height:14px;"></i>
+              <span>Meet the Artist</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Right: Hero Image -->
+        <div class="flex-1 max-w-md w-full reveal reveal-delay-2">
+          <div class="hero-image-frame" style="animation: pulseGold 3s ease-in-out infinite;">
+            <img
+              src="631521684_17854784553665797_7026437896773083111_n.jpg"
+              alt="artquest.m — Artist at work surrounded by paint tubes and flowers"
+              class="w-full aspect-square object-cover"
+              style="filter: brightness(0.95) contrast(1.05);"
+            />
+            <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:1.5rem;background:linear-gradient(to top, rgba(10,10,10,0.9) 0%, transparent 100%);">
+              <p style="font-family:'Cormorant Garamond',serif; font-style:italic; font-size:0.85rem; color:rgba(212,175,55,0.8);">Original artwork · Mixed media</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-10">
+      <span style="font-size:0.6rem; letter-spacing:0.3em; text-transform:uppercase; color:rgba(245,245,245,0.3);">Scroll</span>
+      <div style="width:1px;height:50px;background:linear-gradient(to bottom, rgba(212,175,55,0.6), transparent);animation:float 2s ease-in-out infinite;"></div>
+    </div>
+  </section>
+
+
+  <!-- ─────────────────── MARQUEE ─────────────────── -->
+  <div class="marquee-wrapper py-1">
+    <div class="marquee-track">
+      <!-- Duplicated for seamless loop -->
+      <template id="marquee-tpl">
+        <span class="marquee-item">
+          artquest.m
+          <span style="color:#d4af37; font-size:0.5rem;">◆</span>
+          The Digital Gallery
+          <span style="color:#d4af37; font-size:0.5rem;">◆</span>
+          Every stroke tells a story
+          <span style="color:#d4af37; font-size:0.5rem;">◆</span>
+          Original Artwork
+          <span style="color:#d4af37; font-size:0.5rem;">◆</span>
+          م | the artist
+          <span style="color:#d4af37; font-size:0.5rem;">◆</span>
+        </span>
+      </template>
+    </div>
+  </div>
+
+
+  <!-- ─────────────────── GALLERY ─────────────────── -->
+  <section id="gallery" class="py-24 md:py-32 px-6 md:px-12">
+    <div class="max-w-7xl mx-auto">
+
+      <!-- Header -->
+      <div class="text-center mb-16 reveal">
+        <div class="section-label mb-4">Portfolio</div>
+        <h2 class="section-title">The Gallery</h2>
+        <div class="gold-divider mt-6 max-w-xs mx-auto">
+          <span style="font-size:0.5rem; color:#d4af37;">◆</span>
+        </div>
+        <p class="mt-4" style="font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.1rem; color:rgba(245,245,245,0.45);">
+          A collection of original works — each one a world.
+        </p>
+      </div>
+
+      <!-- Masonry Grid -->
+      <div class="masonry-grid">
+
+        <!-- Card 1 — Islamic Calligraphy ★ HERO CARD -->
+        <div class="masonry-item reveal">
+          <div class="gallery-card" onclick="openModal('img2/islamic.jpg', 'سبحان الله')">
+            <img src="img2/islamic.jpg" alt="Islamic calligraphy — gold on dark canvas" style="height:420px; object-fit:cover; object-position:center;" />
+            <div class="gallery-overlay">
+              <p class="section-label">Calligraphy</p>
+              <h3 style="font-family:'Playfair Display',serif; font-size:1.2rem; margin-top:0.25rem;">سبحان الله</h3>
+              <p style="font-size:0.8rem; color:rgba(245,245,245,0.5); margin-top:0.3rem; font-family:'Cormorant Garamond',serif; font-style:italic;">Gold on dark — words that carry weight…</p>
+              <button class="view-story-btn">
+                <i data-lucide="eye" style="width:12px;height:12px;"></i>
+                View Story
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 — Kitten Portrait -->
+        <div class="masonry-item reveal reveal-delay-1">
+          <div class="gallery-card" onclick="openModal('img2/cat.jpg', 'Soft Eyes')">
+            <img src="img2/cat.jpg" alt="Kitten portrait in acrylic" style="height:340px; object-fit:cover; object-position:top;" />
+            <div class="gallery-overlay">
+              <p class="section-label">Acrylic</p>
+              <h3 style="font-family:'Playfair Display',serif; font-size:1.2rem; margin-top:0.25rem;">Soft Eyes</h3>
+              <p style="font-size:0.8rem; color:rgba(245,245,245,0.5); margin-top:0.3rem; font-family:'Cormorant Garamond',serif; font-style:italic;">Innocence painted in pink and gold…</p>
+              <button class="view-story-btn">
+                <i data-lucide="eye" style="width:12px;height:12px;"></i>
+                View Story
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 — Watercolour Parrot -->
+        <div class="masonry-item reveal reveal-delay-2">
+          <div class="gallery-card" onclick="openModal('img2/bird.jpg', 'Macaw')">
+            <img src="img2/bird.jpg" alt="Watercolour macaw parrot painting" style="height:380px; object-fit:cover;" />
+            <div class="gallery-overlay">
+              <p class="section-label">Watercolour</p>
+              <h3 style="font-family:'Playfair Display',serif; font-size:1.2rem; margin-top:0.25rem;">Macaw</h3>
+              <p style="font-size:0.8rem; color:rgba(245,245,245,0.5); margin-top:0.3rem; font-family:'Cormorant Garamond',serif; font-style:italic;">Bold feathers, bolder spirit…</p>
+              <button class="view-story-btn">
+                <i data-lucide="eye" style="width:12px;height:12px;"></i>
+                View Story
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4 — Cherries (full canvas) -->
+        <div class="masonry-item reveal">
+          <div class="gallery-card" onclick="openModal('img2/berry.jpg', 'Scarlet Bowl')">
+            <img src="img2/berry.jpg" alt="Cherry still life oil painting on canvas" style="height:360px; object-fit:cover;" />
+            <div class="gallery-overlay">
+              <p class="section-label">Oil on Canvas</p>
+              <h3 style="font-family:'Playfair Display',serif; font-size:1.2rem; margin-top:0.25rem;">Scarlet Bowl</h3>
+              <p style="font-size:0.8rem; color:rgba(245,245,245,0.5); margin-top:0.3rem; font-family:'Cormorant Garamond',serif; font-style:italic;">Still life, still alive…</p>
+              <button class="view-story-btn">
+                <i data-lucide="eye" style="width:12px;height:12px;"></i>
+                View Story
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 5 — Watercolour Frog -->
+        <div class="masonry-item reveal reveal-delay-1">
+          <div class="gallery-card" onclick="openModal('img2/frog.jpg', 'Ponder')">
+            <img src="img2/frog.jpg" alt="Watercolour frog painting in sketchbook" style="height:310px; object-fit:cover;" />
+            <div class="gallery-overlay">
+              <p class="section-label">Watercolour</p>
+              <h3 style="font-family:'Playfair Display',serif; font-size:1.2rem; margin-top:0.25rem;">Ponder</h3>
+              <p style="font-size:0.8rem; color:rgba(245,245,245,0.5); margin-top:0.3rem; font-family:'Cormorant Garamond',serif; font-style:italic;">Every creature has its own silence…</p>
+              <button class="view-story-btn">
+                <i data-lucide="eye" style="width:12px;height:12px;"></i>
+                View Story
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 6 — Flower Garden -->
+        <div class="masonry-item reveal reveal-delay-2">
+          <div class="gallery-card" onclick="openModal('img2/flower.jpg', 'Garden Nocturne')">
+            <img src="img2/flower.jpg" alt="Flower garden painting with roses and tulips" style="height:400px; object-fit:cover;" />
+            <div class="gallery-overlay">
+              <p class="section-label">Acrylic</p>
+              <h3 style="font-family:'Playfair Display',serif; font-size:1.2rem; margin-top:0.25rem;">Garden Nocturne</h3>
+              <p style="font-size:0.8rem; color:rgba(245,245,245,0.5); margin-top:0.3rem; font-family:'Cormorant Garamond',serif; font-style:italic;">Blooms that glow against the dark…</p>
+              <button class="view-story-btn">
+                <i data-lucide="eye" style="width:12px;height:12px;"></i>
+                View Story
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 7 — Strawberry Cake -->
+        <div class="masonry-item reveal">
+          <div class="gallery-card" onclick="openModal('img2/cake.jpg', 'Sweet Slice')">
+            <img src="img2/cake.jpg" alt="Watercolour strawberry cheesecake slice" style="height:320px; object-fit:cover;" />
+            <div class="gallery-overlay">
+              <p class="section-label">Watercolour</p>
+              <h3 style="font-family:'Playfair Display',serif; font-size:1.2rem; margin-top:0.25rem;">Sweet Slice</h3>
+              <p style="font-size:0.8rem; color:rgba(245,245,245,0.5); margin-top:0.3rem; font-family:'Cormorant Garamond',serif; font-style:italic;">A moment made delicious…</p>
+              <button class="view-story-btn">
+                <i data-lucide="eye" style="width:12px;height:12px;"></i>
+                View Story
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 8 — Watercolour Swans -->
+        <div class="masonry-item reveal reveal-delay-1">
+          <div class="gallery-card" onclick="openModal('img2/SnapInsta.to_615940300_17847580080665797_6981721337828101070_n.jpg', 'Swan Song')">
+            <img src="img2/SnapInsta.to_615940300_17847580080665797_6981721337828101070_n.jpg" alt="Watercolour swan painting in sketchbook" style="height:360px; object-fit:cover;" />
+            <div class="gallery-overlay">
+              <p class="section-label">Watercolour</p>
+              <h3 style="font-family:'Playfair Display',serif; font-size:1.2rem; margin-top:0.25rem;">Swan Song</h3>
+              <p style="font-size:0.8rem; color:rgba(245,245,245,0.5); margin-top:0.3rem; font-family:'Cormorant Garamond',serif; font-style:italic;">Grace written in fluid strokes…</p>
+              <button class="view-story-btn">
+                <i data-lucide="eye" style="width:12px;height:12px;"></i>
+                View Story
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 9 — Cherry Close-up -->
+        <div class="masonry-item reveal reveal-delay-2">
+          <div class="gallery-card" onclick="openModal('img2/berry2.jpg', 'Red Detail')">
+            <img src="img2/berry2.jpg" alt="Cherry painting close up detail" style="height:280px; object-fit:cover;" />
+            <div class="gallery-overlay">
+              <p class="section-label">Oil · Detail</p>
+              <h3 style="font-family:'Playfair Display',serif; font-size:1.2rem; margin-top:0.25rem;">Red Detail</h3>
+              <p style="font-size:0.8rem; color:rgba(245,245,245,0.5); margin-top:0.3rem; font-family:'Cormorant Garamond',serif; font-style:italic;">In the detail lies the devotion…</p>
+              <button class="view-story-btn">
+                <i data-lucide="eye" style="width:12px;height:12px;"></i>
+                View Story
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 10 — Quote & Plant -->
+        <div class="masonry-item reveal">
+          <div class="gallery-card" onclick="openModal('img2/quote.jpg', 'The Universe Conspires')">
+            <img src="img2/quote.jpg" alt="Quote art with plant illustration" style="height:340px; object-fit:cover;" />
+            <div class="gallery-overlay">
+              <p class="section-label">Mixed Media</p>
+              <h3 style="font-family:'Playfair Display',serif; font-size:1.2rem; margin-top:0.25rem;">The Universe Conspires</h3>
+              <p style="font-size:0.8rem; color:rgba(245,245,245,0.5); margin-top:0.3rem; font-family:'Cormorant Garamond',serif; font-style:italic;">Words worth painting…</p>
+              <button class="view-story-btn">
+                <i data-lucide="eye" style="width:12px;height:12px;"></i>
+                View Story
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 11 — Cherry Tilted Canvas -->
+        <div class="masonry-item reveal reveal-delay-1">
+          <div class="gallery-card" onclick="openModal('img2/berry3.jpg', 'Off Balance')">
+            <img src="img2/berry3.jpg" alt="Cherry still life tilted canvas" style="height:300px; object-fit:cover;" />
+            <div class="gallery-overlay">
+              <p class="section-label">Oil on Canvas</p>
+              <h3 style="font-family:'Playfair Display',serif; font-size:1.2rem; margin-top:0.25rem;">Off Balance</h3>
+              <p style="font-size:0.8rem; color:rgba(245,245,245,0.5); margin-top:0.3rem; font-family:'Cormorant Garamond',serif; font-style:italic;">Even off-centre, beauty holds…</p>
+              <button class="view-story-btn">
+                <i data-lucide="eye" style="width:12px;height:12px;"></i>
+                View Story
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 12 — Studio Setup (original photo) -->
+        <div class="masonry-item reveal reveal-delay-2">
+          <div class="gallery-card" onclick="openModal('631521684_17854784553665797_7026437896773083111_n.jpg', 'The Studio')">
+            <img src="631521684_17854784553665797_7026437896773083111_n.jpg" alt="Artist studio — paint tubes and pink flowers overhead" style="height:360px; object-fit:cover; object-position:center top;" />
+            <div class="gallery-overlay">
+              <p class="section-label">Behind the Scenes</p>
+              <h3 style="font-family:'Playfair Display',serif; font-size:1.2rem; margin-top:0.25rem;">The Studio</h3>
+              <p style="font-size:0.8rem; color:rgba(245,245,245,0.5); margin-top:0.3rem; font-family:'Cormorant Garamond',serif; font-style:italic;">Where every story begins…</p>
+              <button class="view-story-btn">
+                <i data-lucide="eye" style="width:12px;height:12px;"></i>
+                View Story
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─────────────────── ABOUT ─────────────────── -->
+  <section id="about" class="py-24 md:py-32 px-6 md:px-12" style="background: linear-gradient(180deg, #0a0a0a 0%, #0f0f0f 50%, #0a0a0a 100%);">
+    <div class="max-w-7xl mx-auto">
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+        <!-- Left: Visual -->
+        <div class="relative reveal">
+          <!-- Image with frame -->
+          <div style="position:relative; display:inline-block; width:100%;">
+            <div style="
+              position:absolute;
+              top:-16px; left:-16px;
+              width:100%; height:100%;
+              border:1px solid rgba(212,175,55,0.25);
+              border-radius:2px;
+            "></div>
+            <div style="
+              position:absolute;
+              top:16px; right:-16px;
+              width:100%; height:100%;
+              border:1px solid rgba(212,175,55,0.1);
+              border-radius:2px;
+            "></div>
+            <img
+              src="631521684_17854784553665797_7026437896773083111_n.jpg"
+              alt="artquest.m — The Artist"
+              style="
+                width:100%;
+                max-height:500px;
+                object-fit:cover;
+                object-position:top;
+                border-radius:2px;
+                filter: brightness(0.85) contrast(1.1) saturate(0.9);
+                position:relative;
+                z-index:1;
+              "
+            />
+            <!-- Stat overlays -->
+            <div style="
+              position:absolute;
+              bottom:1.5rem; left:50%;
+              transform:translateX(-50%);
+              z-index:2;
+              display:flex;
+              gap:2rem;
+              background:rgba(10,10,10,0.85);
+              backdrop-filter:blur(10px);
+              border:1px solid rgba(212,175,55,0.2);
+              padding:1rem 2rem;
+              border-radius:2px;
+              white-space:nowrap;
+            ">
+              <div style="text-align:center;">
+                <p style="font-family:'Playfair Display',serif; font-size:1.5rem; color:#d4af37; font-weight:700;">50+</p>
+                <p style="font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; color:rgba(245,245,245,0.4); margin-top:0.15rem;">Works</p>
+              </div>
+              <div style="width:1px; background:rgba(212,175,55,0.2);"></div>
+              <div style="text-align:center;">
+                <p style="font-family:'Playfair Display',serif; font-size:1.5rem; color:#d4af37; font-weight:700;">3+</p>
+                <p style="font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; color:rgba(245,245,245,0.4); margin-top:0.15rem;">Years</p>
+              </div>
+              <div style="width:1px; background:rgba(212,175,55,0.2);"></div>
+              <div style="text-align:center;">
+                <p style="font-family:'Playfair Display',serif; font-size:1.5rem; color:#d4af37; font-weight:700;">∞</p>
+                <p style="font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; color:rgba(245,245,245,0.4); margin-top:0.15rem;">Stories</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Bio -->
+        <div class="reveal reveal-delay-2">
+          <div class="section-label mb-4">About the Artist</div>
+          <h2 class="section-title mb-6">
+            <span class="gold-text">م</span> | the artist
+          </h2>
+
+          <div class="gold-divider mb-8">
+            <span style="font-size:0.5rem; color:#d4af37;">◆</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:1.25rem;">
+            <p style="font-family:'Cormorant Garamond',serif; font-size:1.15rem; line-height:1.9; color:rgba(245,245,245,0.75);">
+              artquest.m is a self-taught artist whose work lives at the intersection of emotion and form. Every piece is an exploration — a conversation between the canvas and the soul.
+            </p>
+            <p style="font-family:'Cormorant Garamond',serif; font-size:1.15rem; line-height:1.9; color:rgba(245,245,245,0.6);">
+              Drawing from personal experience, nature, and the quiet moments between breaths, the work seeks to make the invisible visible — to give shape to what language cannot hold.
+            </p>
+            <p style="font-family:'Cormorant Garamond',serif; font-size:1.15rem; line-height:1.9; color:rgba(245,245,245,0.5); font-style:italic;">
+              "I paint to remember. I paint to forget. The rest is just colour."
+            </p>
+          </div>
+
+          <div class="mt-10 flex flex-wrap gap-3">
+            <span class="bio-tag">Painting</span>
+            <span class="bio-tag">Illustration</span>
+            <span class="bio-tag">Mixed Media</span>
+            <span class="bio-tag">Pencil Sketching</span>
+            <span class="bio-tag">Abstract</span>
+          </div>
+
+          <a href="https://instagram.com/artquest.m" target="_blank" rel="noopener" class="follow-btn mt-8 inline-flex">
+            <i data-lucide="instagram" style="width:14px;height:14px;"></i>
+            View Full Portfolio
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─────────────────── INSTAGRAM ─────────────────── -->
+  <section id="contact" class="py-24 md:py-32 px-6 md:px-12">
+    <div class="max-w-4xl mx-auto text-center">
+
+      <div class="section-label mb-4 reveal">Connect</div>
+      <h2 class="section-title mb-6 reveal reveal-delay-1">Find Me on Instagram</h2>
+
+      <div class="gold-divider mb-8 reveal reveal-delay-2">
+        <span style="font-size:0.5rem; color:#d4af37;">◆</span>
+      </div>
+
+      <!-- Insta mockup card -->
+      <div class="insta-card p-10 md:p-16 reveal reveal-delay-2" style="position:relative; overflow:hidden;">
+
+        <!-- BG decorations -->
+        <div style="position:absolute; top:-80px; right:-80px; width:300px; height:300px; border-radius:50%; background:radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%); pointer-events:none;"></div>
+        <div style="position:absolute; bottom:-60px; left:-60px; width:200px; height:200px; border-radius:50%; background:radial-gradient(circle, rgba(212,175,55,0.04) 0%, transparent 70%); pointer-events:none;"></div>
+
+        <div style="position:relative; z-index:1;">
+
+          <!-- Instagram logo + handle -->
+          <div style="display:flex; align-items:center; justify-content:center; gap:1rem; margin-bottom:2rem;">
+            <div style="
+              width:64px; height:64px;
+              background:linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+              border-radius:16px;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              box-shadow:0 8px 30px rgba(253,29,29,0.3);
+            ">
+              <i data-lucide="instagram" style="width:32px;height:32px;color:white;"></i>
+            </div>
+          </div>
+
+          <h3 style="font-family:'Playfair Display',serif; font-size:clamp(1.5rem, 4vw, 2.5rem); font-weight:700; margin-bottom:0.5rem;">
+            @artquest.m
+          </h3>
+          <p style="font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.1rem; color:rgba(245,245,245,0.45); margin-bottom:0.4rem;">
+            م | the artist
+          </p>
+          <p style="font-family:'Cormorant Garamond',serif; font-style:italic; font-size:0.9rem; color:rgba(245,245,245,0.3); margin-bottom:2.5rem; letter-spacing:0.05em;">
+            Every stroke tells a story…
+          </p>
+
+          <!-- Real stats -->
+          <div style="display:flex; justify-content:center; gap:3rem; margin-bottom:2.5rem; flex-wrap:wrap;">
+            <div style="text-align:center;">
+              <p style="font-family:'Playfair Display',serif; font-size:1.5rem; color:#d4af37; font-weight:700;">70</p>
+              <p style="font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; color:rgba(245,245,245,0.35); margin-top:0.2rem;">Followers</p>
+            </div>
+            <div style="width:1px; background:rgba(212,175,55,0.15);"></div>
+            <div style="text-align:center;">
+              <p style="font-family:'Playfair Display',serif; font-size:1.5rem; color:#d4af37; font-weight:700;">21</p>
+              <p style="font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; color:rgba(245,245,245,0.35); margin-top:0.2rem;">Posts</p>
+            </div>
+            <div style="width:1px; background:rgba(212,175,55,0.15);"></div>
+            <div style="text-align:center;">
+              <p style="font-family:'Playfair Display',serif; font-size:1.5rem; color:#d4af37; font-weight:700;">38</p>
+              <p style="font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; color:rgba(245,245,245,0.35); margin-top:0.2rem;">Following</p>
+            </div>
+          </div>
+
+          <a
+            href="https://instagram.com/artquest.m"
+            target="_blank"
+            rel="noopener"
+            class="follow-btn"
+            id="instagram-follow-btn"
+            style="font-size:0.8rem; padding:1rem 2.5rem;"
+          >
+            <i data-lucide="instagram" style="width:16px;height:16px;"></i>
+            Follow @artquest.m
+          </a>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─────────────────── FOOTER ─────────────────── -->
+  <footer class="py-10 px-6 md:px-12">
+    <div class="max-w-7xl mx-auto">
+      <div class="footer-line mb-8"></div>
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+
+        <div style="font-family:'Playfair Display',serif; font-size:0.9rem; font-weight:700; letter-spacing:0.1em;">
+          artquest<span style="color:#d4af37;">.m</span>
+        </div>
+
+        <p style="font-family:'Cormorant Garamond',serif; font-style:italic; font-size:0.85rem; color:rgba(245,245,245,0.3);">
+          Every stroke tells a story...
+        </p>
+
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <a href="https://instagram.com/artquest.m" target="_blank" rel="noopener"
+            style="color:rgba(245,245,245,0.35); transition:color 0.3s; display:flex;" class="hover:text-accent"
+            aria-label="Instagram">
+            <i data-lucide="instagram" style="width:18px;height:18px;"></i>
+          </a>
+        </div>
+
+      </div>
+      <div class="footer-line mt-8 mb-4"></div>
+      <p style="text-align:center; font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; color:rgba(245,245,245,0.2);">
+        © 2024 artquest.m — All rights reserved
+      </p>
+    </div>
+  </footer>
+
+
+  <script>
+    // ─── Init Lucide Icons ───
+    lucide.createIcons();
+
+    // ─── Populate marquee ───
+    (function() {
+      const track = document.querySelector('.marquee-track');
+      const tpl = document.getElementById('marquee-tpl');
+      const content = tpl.content.cloneNode(true);
+      const content2 = tpl.content.cloneNode(true);
+      track.appendChild(content);
+      track.appendChild(content2);
+      lucide.createIcons();
+    })();
+
+    // ─── Bio tags styling (inline) ───
+    document.querySelectorAll('.bio-tag').forEach(tag => {
+      tag.style.cssText = `
+        font-size:0.7rem;
+        letter-spacing:0.15em;
+        text-transform:uppercase;
+        color:rgba(212,175,55,0.8);
+        border:1px solid rgba(212,175,55,0.25);
+        padding:0.35rem 0.75rem;
+        border-radius:1px;
+        font-family:Inter,sans-serif;
+        background:rgba(212,175,55,0.04);
+        display:inline-block;
+      `;
+    });
+
+    // ─── Navbar scroll ───
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 60) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+
+    // ─── Hamburger / Mobile Menu ───
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileClose = document.getElementById('mobile-close');
+
+    hamburger.addEventListener('click', () => {
+      mobileMenu.classList.add('open');
+      lucide.createIcons();
+    });
+
+    mobileClose.addEventListener('click', closeMobileMenu);
+
+    function closeMobileMenu() {
+      mobileMenu.classList.remove('open');
+    }
+
+    // ─── Scroll Reveal ───
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, {
+      threshold: 0.12,
+      rootMargin: '0px 0px -40px 0px'
+    });
+
+    document.querySelectorAll('.reveal').forEach(el => {
+      revealObserver.observe(el);
+    });
+
+    // ─── Custom Cursor ───
+    const dot = document.getElementById('cursorDot');
+    const ring = document.getElementById('cursorRing');
+    let mouseX = 0, mouseY = 0;
+    let ringX = 0, ringY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      dot.style.left = mouseX + 'px';
+      dot.style.top = mouseY + 'px';
+    });
+
+    // Smooth ring following
+    function animateRing() {
+      ringX += (mouseX - ringX) * 0.12;
+      ringY += (mouseY - ringY) * 0.12;
+      ring.style.left = ringX + 'px';
+      ring.style.top = ringY + 'px';
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    // Expand ring on interactive elements
+    document.querySelectorAll('a, button, .gallery-card').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        ring.style.width = '60px';
+        ring.style.height = '60px';
+        ring.style.borderColor = 'rgba(212,175,55,0.8)';
+      });
+      el.addEventListener('mouseleave', () => {
+        ring.style.width = '32px';
+        ring.style.height = '32px';
+        ring.style.borderColor = 'rgba(212,175,55,0.5)';
+      });
+    });
+
+    // ─── Camera Shutter Click Sound (Web Audio API) ───
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function playShutterClick() {
+      // Lazy-init AudioContext (must be triggered by user gesture)
+      if (!audioCtx) audioCtx = new AudioCtx();
+      const ctx = audioCtx;
+      const now = ctx.currentTime;
+
+      // ── Layer 1: Mechanical noise burst (the "click" transient) ──
+      const bufferSize = ctx.sampleRate * 0.035; // 35ms
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const noiseData = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        noiseData[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+      }
+      const noiseSource = ctx.createBufferSource();
+      noiseSource.buffer = noiseBuffer;
+
+      const noiseBandpass = ctx.createBiquadFilter();
+      noiseBandpass.type = 'bandpass';
+      noiseBandpass.frequency.value = 2800;
+      noiseBandpass.Q.value = 0.8;
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.18, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+
+      noiseSource.connect(noiseBandpass);
+      noiseBandpass.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+      noiseSource.start(now);
+      noiseSource.stop(now + 0.04);
+
+      // ── Layer 2: Soft tonal thud (body resonance) ──
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.exponentialRampToValueAtTime(60, now + 0.06);
+
+      const oscGain = ctx.createGain();
+      oscGain.gain.setValueAtTime(0.12, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+      osc.connect(oscGain);
+      oscGain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.08);
+
+      // ── Layer 3: Tiny release tick (shutter rebound) ──
+      setTimeout(() => {
+        const tickNow = ctx.currentTime;
+        const tickBuf = ctx.createBuffer(1, ctx.sampleRate * 0.012, ctx.sampleRate);
+        const tickData = tickBuf.getChannelData(0);
+        for (let i = 0; i < tickData.length; i++) {
+          tickData[i] = (Math.random() * 2 - 1) * (1 - i / tickData.length);
+        }
+        const tickSrc = ctx.createBufferSource();
+        tickSrc.buffer = tickBuf;
+        const tickGain = ctx.createGain();
+        tickGain.gain.setValueAtTime(0.07, tickNow);
+        tickGain.gain.exponentialRampToValueAtTime(0.001, tickNow + 0.012);
+        tickSrc.connect(tickGain);
+        tickGain.connect(ctx.destination);
+        tickSrc.start(tickNow);
+        tickSrc.stop(tickNow + 0.015);
+      }, 55);
+    }
+
+    // ─── Modal ───
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalImg = document.getElementById('modal-img');
+
+    function openModal(src, title) {
+      playShutterClick();
+      modalImg.src = src;
+      modalImg.alt = title;
+      modalOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      lucide.createIcons();
+    }
+
+    function closeModal(event, force = false) {
+      if (force || (event && event.target === modalOverlay)) {
+        modalOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+        setTimeout(() => { modalImg.src = ''; }, 300);
+      }
+    }
+
+    // Keyboard close
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal(null, true);
+    });
+
+    // ─── Active nav highlight on scroll ───
+    const sections = ['gallery', 'about', 'contact'];
+    const navLinks = {
+      gallery: document.getElementById('nav-gallery'),
+      about: document.getElementById('nav-about'),
+      contact: document.getElementById('nav-contact'),
+    };
+
+    const sectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          Object.values(navLinks).forEach(l => {
+            if (l) l.style.color = 'rgba(245,245,245,0.7)';
+          });
+          const link = navLinks[entry.target.id];
+          if (link) link.style.color = '#d4af37';
+        }
+      });
+    }, { threshold: 0.4 });
+
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) sectionObserver.observe(el);
+    });
+
+    // ─── Trigger hero reveal on load ───
+    window.addEventListener('load', () => {
+      document.querySelectorAll('#hero .reveal').forEach(el => {
+        el.classList.add('visible');
+      });
+    });
+  </script>
+
+</body>
+</html>
